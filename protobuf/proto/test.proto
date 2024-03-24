@@ -1,0 +1,20 @@
+syntax = "proto2";
+
+message Graph {
+  required string name = 1;
+  repeated Tensor inputs = 2;
+  repeated Tensor outputs = 3;
+}
+
+message Dims {
+  required int32 N = 1;
+  required int32 H = 2;
+  required int32 W = 3;
+  required int32 C = 4;
+}
+
+message Tensor {
+  required string name = 1;
+  required Dims dims = 3;
+  repeated float value_f = 2;
+}

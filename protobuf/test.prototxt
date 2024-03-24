@@ -1,0 +1,28 @@
+name: "Graph"
+inputs {
+  name: "Tesnor1"
+  value_f: 64.0
+  value_f: 128.0
+  value_f: 128.0
+  value_f: 32.0
+  dims {
+    N: 64
+    H: 128
+    W: 128
+    C: 32
+  }
+}
+outputs {
+  name: "Tesnor1"
+  value_f: 128.0
+  value_f: 256.0
+  value_f: 256.0
+  value_f: 16.0
+  dims {
+    N: 128
+    H: 256
+    W: 256
+    C: 16
+  }
+}
+
