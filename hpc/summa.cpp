@@ -33,12 +33,12 @@ void initMatrix(float *ptr, int m, int n) {
 
 void gatherMatrix(int mb, int nb, float *loc, int bM, int bN, float *global, MPI_Comm comm) {
     float * A_tmp = NULL;
-    if (rank == 0 || rank == 2) {
+    if (rank == 0) {
         A_tmp = new float [bM * bN];
     }
     MPI_Gather(loc, mb*nb, MPI_FLOAT, A_tmp, mb*nb, MPI_FLOAT, 0, comm);
     // only rank 0 has something to do, others are free
-    if (rank != 0 && rank != 2) return;
+    if (rank != 0) return;
 
     int nblks_m = bM / mb;
     int nblks_n = bN / nb;
@@ -60,7 +60,8 @@ void gatherMatrix(int mb, int nb, float *loc, int bM, int bN, float *global, MPI
     free(A_tmp);
 }
 
-void scatterMatrix(int m_block, int n_block, int bM, int bN, float *local, float *global, MPI_Comm comm, int m, int n, int N, int id = 0) {
+void scatterMatrix(int m_block, int n_block, int bM, int bN, float *local, float *global,
+  MPI_Comm comm, int m, int n, int N, int id = 0) {
   float *temp = nullptr;
   if (rank == 0 || rank == id) {
     // printf("rank:%d\n", rank);
@@ -122,9 +123,11 @@ int compute(float *C, float *A, float *B, float *C_recv) {
         std::cerr << "number_of_processes must be: " << 8 << std::endl;
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
-    int procs_row = 4;
+    int procs_row = 2;
     int procs_col = number_of_processes / procs_row;
-
+    if (rank == 0) {
+        std::cout << "rows: " << procs_row << " " << "cols: " << procs_col << "\n";
+    }
     int n_dims = 2;
     int dims[n_dims] = {procs_row, procs_col};
     int periods[n_dims] = {0, 0};
@@ -204,8 +207,8 @@ int compute(float *C, float *A, float *B, float *C_recv) {
       memcpy(B_saved, B_local, k_block * n_block * sizeof(float));
 
       if (rank == 4) {
-        printMatrix(A_local, m_block, k_block);
-        printMatrix(B_local, k_block, n_block);
+        // printMatrix(A_local, m_block, k_block);
+        // printMatrix(B_local, k_block, n_block);
       }
 
       for(int broadcaster = 0; broadcaster < bcast; ++broadcaster) {
@@ -224,16 +227,13 @@ int compute(float *C, float *A, float *B, float *C_recv) {
         
         sumMatrix(m_block, n_block, C_tmp, C_local);
         if (rank == 14) {
-          printMatrix(A_local, m_block, k_block);
-          printMatrix(B_local, k_block, n_block);
+          // printMatrix(A_local, m_block, k_block);
+          // printMatrix(B_local, k_block, n_block);
           // printMatrix(C_local, m_block, n_block);
         }
       }
     }
     gatherMatrix(m_block, n_block, C_local, bM, bN, C, MPI_COMM_WORLD);
-    // if (rank == 4)
-      // printMatrix(C_local, m_block, n_block);
-    // write back
     delete[] C_buf;
 }
 
@@ -242,7 +242,7 @@ int main(int argc, char **argv) {
     MPI_Comm_size(MPI_COMM_WORLD, &number_of_processes);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    M = 4; K = 4; N = 8;
+    M = 10; K = 14; N = 16;
 
     if (rank == 0) {
       std::cout << "======================" << std::endl;
@@ -257,15 +257,15 @@ int main(int argc, char **argv) {
     initMatrix(A, M, K);
     initMatrix(B, K, N);
     if (rank == 0) {
-      printMatrix(A, M, K);
-      printMatrix(B, K, N);
+      // printMatrix(A, M, K);
+      // printMatrix(B, K, N);
     }
     compute(C, A, B, C_recv);
     matMul(M, K, N, A, B, baseline);
     MPI_Barrier(MPI_COMM_WORLD);
     if (rank == 0) {
-      printMatrix(C, M, N);
-      printMatrix(baseline, M, N);
+      // printMatrix(C, M, N);
+      // printMatrix(baseline, M, N);
       computeDiff(C, baseline);
     }
     delete[] A;
@@ -279,3 +279,4 @@ int main(int argc, char **argv) {
 // run cmd
 // mpicxx summa.cpp -o summa
 // mpirun -np 8 ./summa
+// https://juejin.cn/post/7171997964465307655
