@@ -2,3 +2,4 @@
 *.txt
 **/__pycache__
 *.sh
+pybind11/build
